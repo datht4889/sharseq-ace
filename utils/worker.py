@@ -273,7 +273,7 @@ class Worker(object):
                             
                             ### change ###
                             new_loss = []
-                            alpha =0.7
+                            alpha =0.8
                             for _ in loss:
                                 new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
                             ##############
