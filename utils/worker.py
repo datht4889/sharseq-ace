@@ -272,7 +272,7 @@ class Worker(object):
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
                             
-                            print("TYPE LOSS", type(loss))
+                            print("TYPE LOSS", loss)
                             ### change ###
                             new_loss = []
                             # loss.to(self.device)
@@ -280,7 +280,7 @@ class Worker(object):
                             for _ in torch.tensor(loss).to(self.device):
                                 new_loss.append(sum(_ + torch.tensor(loss).to(self.device)*alpha).item())
                             # new_loss = torch.tensor(new_loss).to(self.device)
-                            print("TYPE NEW_LOSS", type(new_loss))
+                            print("TYPE NEW_LOSS", new_loss)
                             ##############
 
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters)
