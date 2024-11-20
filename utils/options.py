@@ -75,7 +75,7 @@ class Config:
         json_root="/kaggle/working",
         # feature_root="/kaggle/working/features",
         feature_root="/kaggle/input/sharpseq-features",
-        stream_file="/kaggle/working/sharpseq/data/MAVEN/streams.json",
+        stream_file="/kaggle/working/ACE/streams.json",
         batch_size=256,
         init_slots=13,
         patience=6,
