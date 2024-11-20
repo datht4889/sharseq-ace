@@ -69,7 +69,7 @@ def main():
     loss_file = open(loss_file_path, 'a')
 
     best_loss_file = os.path.join(opts.log_dir, "BEST_LOSS_LOG.txt")
-    best_loss_file = open(loss_file_path, 'a')
+    best_loss_file = open(best_loss_file, 'a')
 
     perm_id = opts.perm_id
     if opts.setting == "classic":
