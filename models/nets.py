@@ -175,7 +175,7 @@ class lm_ot(torch.nn.Module):
         self.topics = torch.nn.ParameterList([torch.nn.Parameter(torch.nn.init.normal_(torch.empty(1,hidden_size), 0, 0.01)) for i in range(max_slots-1)])
         self.to(device)
         self.device = device
-        with open("/kaggle/working/sharpseq/verb.json") as f:
+        with open("/kaggle/working/sharseq-ace/verb.json") as f:
             self.verbs = json.load(f)
         self.non_verbs = [i for i in range(vocab_size) if i not in self.verbs]
     
@@ -305,7 +305,7 @@ class LInEx(MetaModule):
         self.trained_replay = set()
         self.trained_generate = set()
         #self.alpha = torch.nn.Parameter(torch.normal(torch.zeros(input_dim), torch.ones(input_dim)*-1)).to(self.device)
-        with open("/kaggle/working/sharpseq/data/MAVEN/streams.json") as f:
+        with open("/kaggle/working/ACE/streams.json") as f:
             task2id = json.load(f)
             id2task = {}
             start = 1
