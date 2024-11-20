@@ -279,7 +279,8 @@ class Worker(object):
                             alpha = 0.5
                             for _ in torch.tensor(loss).to(self.device):
                                 new_loss.append(sum(_ + torch.tensor(loss).to(self.device)*alpha).item())
-                            new_loss = torch.tensor(new_loss).to(self.device)
+                            # new_loss = torch.tensor(new_loss).to(self.device)
+                            print("TYPE NEW_LOSS", type(new_loss))
                             ##############
 
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters)
