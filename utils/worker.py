@@ -211,7 +211,6 @@ class Worker(object):
                             loss.backward()
                         
                     else:
-                        print("LENGTH LOSS", len(loss))
                         if opts.debug:
                             import time
                             st_time = time.time()
@@ -272,13 +271,11 @@ class Worker(object):
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
                             
-                            print("TYPE LOSS", loss)
                             ### change ###
                             new_loss = []
                             alpha =0.5
                             for _ in loss:
                                 new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
-                            print("TYPE NEW_LOSS", new_loss)
                             ##############
 
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters)
