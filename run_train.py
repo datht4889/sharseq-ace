@@ -65,6 +65,12 @@ def main():
 
     dataset_id = 0
 
+    loss_file_path = os.path.join(opts.log_dir, "LOSS_LOG.txt")
+    loss_file = open(loss_file_path, 'a')
+
+    best_loss_file = os.path.join(opts.log_dir, "BEST_LOSS_LOG.txt")
+    best_loss_file = open(loss_file_path, 'a')
+
     perm_id = opts.perm_id
     if opts.setting == "classic":
         streams = json.load(open(opts.stream_file))
@@ -156,8 +162,8 @@ def main():
     learned_labels = set(stage_labels[0])
     dev_metrics = None
     test_metrics = None
-    print("Finetune and Generate",opts.finetune, opts.generate)
-    print("TRAIN_EPOCH", opts.train_epoch)
+    # print("Finetune and Generate",opts.finetune, opts.generate)
+    # print("TRAIN_EPOCH", opts.train_epoch)
     while not termination:
         print("==============================================")
         if not opts.test_only:
@@ -196,7 +202,7 @@ def main():
                 #     pdb.set_trace()
                 for output_log in [print, worker._log]:
                     output_log(
-                        f"Epoch {worker.epoch:3d}  Train Loss {epoch_loss} {epoch_metric}")
+                        f"Epoch {worker.epoch:3d}  Train Loss {epoch_loss} {epoch_metric}")       
         else:
             learned_labels = set([t for stream in stage_labels for t in stream])
             termination = True
@@ -234,7 +240,7 @@ def main():
         for output_log in [print, worker._log]:
             output_log(
                 f"Epoch {worker.epoch:3d}:  Dev {dev_metrics}"
-            )
+            ) 
         # if worker.epoch == opts.train_epoch:
         #import pdb
         #pdb.set_trace()
@@ -277,6 +283,8 @@ def main():
                     output_log(
                         f"Epoch {worker.epoch:3d}: Test {test_metrics}"
                     )
+                loss_file.writelines(f"Epoch {worker.epoch:3d}  Train Loss {epoch_loss} {epoch_metric} Dev {dev_metrics} Test {test_metrics}")
+                loss_file.write('\n')  
                 best_dev = dev_metrics
                 worker.save(model, optimizer, postfix=str(loader_id))
                 best_test = test_metrics
@@ -391,7 +399,7 @@ def main():
                 if not opts.finetune:
                     model.set_history()
                     print("SET HISTORY")
-                for output_log in [print, worker._log]:
+                for output_log in [print, worker._log, best_loss_file.writelines]:
                     output_log(f"BEST DEV {loader_id-1}: {best_dev if best_dev is not None else 0}")
                     output_log(f"BEST TEST {loader_id-1}: {best_test if best_test is not None else 0}")
                 if loader_id == len(loaders) - 2:
@@ -430,5 +438,7 @@ def main():
                 worker.epoch = 0
                 best_dev = None; best_test = None
 
+    loss_file.close()
+    best_loss_file.close()
 if __name__ == "__main__":
     main()
