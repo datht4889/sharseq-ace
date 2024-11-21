@@ -68,9 +68,6 @@ def main():
     loss_file_path = os.path.join(opts.log_dir, "LOSS_LOG.txt")
     loss_file = open(loss_file_path, 'a')
 
-    best_loss_file = os.path.join(opts.log_dir, "BEST_LOSS_LOG.txt")
-    best_loss_file = open(best_loss_file, 'a')
-
     perm_id = opts.perm_id
     if opts.setting == "classic":
         streams = json.load(open(opts.stream_file))
@@ -399,7 +396,7 @@ def main():
                 if not opts.finetune:
                     model.set_history()
                     print("SET HISTORY")
-                for output_log in [print, worker._log, best_loss_file.writelines]:
+                for output_log in [print, worker._log, loss_file.writelines]:
                     output_log(f"BEST DEV {loader_id-1}: {best_dev if best_dev is not None else 0}")
                     output_log(f"BEST TEST {loader_id-1}: {best_test if best_test is not None else 0}")
                 if loader_id == len(loaders) - 2:
@@ -439,6 +436,5 @@ def main():
                 best_dev = None; best_test = None
 
     loss_file.close()
-    best_loss_file.close()
 if __name__ == "__main__":
     main()
