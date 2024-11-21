@@ -76,7 +76,7 @@ class Config:
         # feature_root="/kaggle/working/features",
         feature_root="/kaggle/input/sharpseq-features",
         stream_file="/kaggle/working/ACE/streams.json",
-        batch_size=256,
+        batch_size=512,
         init_slots=13,
         patience=6,
         input_dim=2048,
