@@ -191,7 +191,7 @@ class Config:
         self.dropout = dropout
         self.p = p
         self.num_sam_loss = num_sam_loss
-        self.sam = sam
+        self.sam = sam  
         self.ot = ot
         self.llm2vec = llm2vec
 
@@ -206,7 +206,7 @@ def parse_arguments():
     # parser = argparse.ArgumentParser()
     # define_arguments(parser)
     # args = parser.parse_args()
-    args = Config(train_epoch=10)
+    args = Config(train_epoch=15)
     args.log = os.path.join(args.log_dir, "logfile.log")
 
     if (not args.test_only) and os.path.exists(args.log_dir):
