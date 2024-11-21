@@ -188,8 +188,7 @@ class Worker(object):
             info = ""
         iterator = tqdm(loader, f"{self.save_model}|{info}|Epoch {self.epoch:3d}: {split}|", ncols=128)
         #add classes params to shared parameters
-        #parameters = [param for param in model.input_map.parameters()]
-        parameters = [param for param in model.parameters()]
+        parameters = [param for param in model.input_map.parameters()]
         #print(parameters[0], type(parameters[0]))
 
         z = 0
