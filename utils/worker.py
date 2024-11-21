@@ -270,11 +270,9 @@ class Worker(object):
                             loss = f_loss(batch)
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
-                            if it % 100 == 0:    
-                                print("LOSS: ", loss)
                             ### change ###
                             new_loss = []
-                            alpha =0
+                            alpha = 0.5
                             for _ in loss:
                                 new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
                             ##############
