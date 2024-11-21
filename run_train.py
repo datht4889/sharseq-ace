@@ -125,7 +125,7 @@ def main():
         "lr":opts.learning_rate,
         "weight_decay": opts.decay,
         "betas": (0.9, 0.999)}
-        ]
+    ]
     optimizer = AdamW(params=param_groups)
     optimizer_correction = None
     if opts.balance == "bic":
