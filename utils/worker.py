@@ -276,10 +276,10 @@ class Worker(object):
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
                             ## change ###
-                            new_loss = []
-                            alpha = 0.2
-                            for _ in loss:
-                                new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
+                            # new_loss = []
+                            # alpha = 0.2
+                            # for _ in loss:
+                            #     new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
                             #############
                             loss, alpha = self.mul_loss(losses=loss, shared_parameters=parameters)
                         except Exception as e:
