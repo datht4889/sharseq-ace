@@ -399,6 +399,7 @@ def main():
                 for output_log in [print, worker._log, loss_file.writelines]:
                     output_log(f"BEST DEV {loader_id-1}: {best_dev if best_dev is not None else 0}")
                     output_log(f"BEST TEST {loader_id-1}: {best_test if best_test is not None else 0}")
+                loss_file.write('\n')  
                 if loader_id == len(loaders) - 2:
                     termination = True
                 else:
