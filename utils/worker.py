@@ -10,7 +10,7 @@ import gc
 
 import traceback
 from utils.options import parse_arguments
-from .weight_methods import WeightMethods, PCGrad, IMTLG, MGDA
+from .weight_methods import WeightMethods, PCGrad, IMTLG, MGDA, FairGrad
 from .sam import SAM
 opts = parse_arguments()
 if opts.mul_task_type == 'NashMTL':
@@ -256,6 +256,8 @@ class Worker(object):
                                     )
                                 if opts.mul_task_type == 'NashMTL':
                                     self.mul_loss = NashMTL(n_tasks=len(loss), device=self.device)
+                                if opts.mul_task_type == 'FairGrad':
+                                    self.mul_loss = FairGrad(n_tasks=len(loss), device=self.device, FairGrad_alpha=1.0)
 
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
