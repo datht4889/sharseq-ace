@@ -119,7 +119,8 @@ class Config:
         mul_task=True,
         contrastive=False,
         mul_distill=True,
-        mul_task_type="NashMTL",
+        mul_task_type="FairGrad",
+        extra_weight_loss = 0.2,
         naive_replay=False,
         debug=False,
         colab_viet=False,
@@ -132,7 +133,8 @@ class Config:
         num_sam_loss=2,
         sam=1,
         ot=False,
-        llm2vec=False
+        llm2vec=False,
+
     ):
         self.json_root = json_root
         self.feature_root = feature_root
@@ -181,6 +183,7 @@ class Config:
         self.contrastive = contrastive
         self.mul_distill = mul_distill
         self.mul_task_type = mul_task_type
+        self.extra_weight_loss = extra_weight_loss
         self.naive_replay = naive_replay
         self.debug = debug
         self.colab_viet = colab_viet

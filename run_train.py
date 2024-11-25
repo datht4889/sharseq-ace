@@ -67,6 +67,8 @@ def main():
 
     loss_file_path = os.path.join(opts.log_dir, "LOSS_LOG.txt")
     loss_file = open(loss_file_path, 'a')
+    loss_file.writelines(f"MOO {opts.mul_task_type} extra_weight_loss: {opts.extra_weight_loss}  Max Epoch {opts.train_epoch}")
+    loss_file.write('\n')  
 
     perm_id = opts.perm_id
     if opts.setting == "classic":

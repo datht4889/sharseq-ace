@@ -277,9 +277,8 @@ class Worker(object):
                                 loss = torch.stack(loss) * 1.0
                             ## change ###
                             new_loss = []
-                            alpha = 2
                             for _ in loss:
-                                new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*alpha))
+                                new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*opts.extra_weight_loss))
                             #############
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=1.0)
                         except Exception as e:
