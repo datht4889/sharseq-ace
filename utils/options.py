@@ -120,7 +120,7 @@ class Config:
         contrastive=False,
         mul_distill=True,
         mul_task_type="FairGrad",
-        extra_weight_loss = 0.2,
+        extra_weight_loss = 0.1,
         naive_replay=False,
         debug=False,
         colab_viet=False,
