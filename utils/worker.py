@@ -280,7 +280,7 @@ class Worker(object):
                             for _ in loss:
                                 new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*opts.extra_weight_loss))
                             #############
-                            loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=1.0)
+                            loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=0.5)
                         except Exception as e:
                             #import pdb
                             #pdb.set_trace()
