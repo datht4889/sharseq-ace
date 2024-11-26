@@ -209,7 +209,7 @@ def parse_arguments():
     # parser = argparse.ArgumentParser()
     # define_arguments(parser)
     # args = parser.parse_args()
-    args = Config(train_epoch=30)
+    args = Config(train_epoch=20)
     args.log = os.path.join(args.log_dir, "logfile.log")
 
     if (not args.test_only) and os.path.exists(args.log_dir):
