@@ -119,7 +119,7 @@ class Config:
         mul_task=True,
         contrastive=False,
         mul_distill=True,
-        mul_task_type="NashMTL",
+        mul_task_type="FairGrad",
         extra_weight_loss = 0.1,
         naive_replay=False,
         debug=False,
