@@ -294,9 +294,9 @@ def main():
                     'train_loss': epoch_loss,
                     'train_metric': epoch_metric,
                     'dev_loss': dev_loss,
-                    'dev_metrics': dev_metrics.to_dict() if dev_metrics else None,
+                    'dev_metrics': dev_metrics if dev_metrics else None,
                     'test_loss': test_loss,
-                    'test_metrics': test_metrics.to_dict() if test_metrics else None
+                    'test_metrics': test_metrics if test_metrics else None
                 })
                 loss_file.write('\n')  
                 best_dev = dev_metrics
