@@ -120,7 +120,7 @@ class Config:
         contrastive=False,
         mul_distill=True,
         mul_task_type="NashMTL",
-        extra_weight_loss = 0,
+        extra_weight_loss = 3,
         naive_replay=False,
         debug=False,
         colab_viet=False,
@@ -134,6 +134,7 @@ class Config:
         sam=1,
         ot=False,
         llm2vec=False,
+        user_wandb=True
 
     ):
         self.json_root = json_root
@@ -197,6 +198,7 @@ class Config:
         self.sam = sam  
         self.ot = ot
         self.llm2vec = llm2vec
+        self.user_wandb = user_wandb
 
     def __repr__(self):
         return str(self.__dict__)

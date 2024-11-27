@@ -13,6 +13,8 @@ from utils.datastream import get_stage_loaders, get_stage_loaders_n
 from utils.worker import Worker
 from models.nets import LInEx, BIC, ICARL
 
+import wandb
+
 summary = None
 torch.set_num_threads(20)
 def add_summary_value(writer, key, value, iteration):
@@ -69,6 +71,10 @@ def main():
     loss_file = open(loss_file_path, 'a')
     loss_file.writelines(f"MOO {opts.mul_task_type} extra_weight_loss: {opts.extra_weight_loss}  Max Epoch {opts.train_epoch}")
     loss_file.write('\n')  
+
+    if opts.user_wandb:
+        wandb.login(key='472926b1247b9e82ceefff2ba02d0e1afc935785')
+        wandb.init(project="sharpseq-ace", name=f"MOO {opts.mul_task_type} extra_weight_loss: {opts.extra_weight_loss}  Max Epoch {opts.train_epoch}")
 
     perm_id = opts.perm_id
     if opts.setting == "classic":
