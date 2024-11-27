@@ -370,6 +370,249 @@ class FairGrad(WeightMethod):
 
         return torch.stack(grads)
 
+class ExcessMTL(WeightMethod):
+    """
+    ExcessMTL.
+
+    This method is proposed in `Robust Multi-Task Learning with Excess Risks (ICML 2024)
+    <https://openreview.net/forum?id=JzWFmMySpn>`_ and implemented by modifying from the 
+    `official PyTorch implementation <https://github.com/yifei-he/ExcessMTL/blob/main/LibMTL/LibMTL/weighting/ExcessMTL.py>`_.
+    """
+    def __init__(self, n_tasks: int, device: torch.device):
+        super().__init__(n_tasks, device)
+        self.loss_weight = torch.ones(n_tasks, device=device, requires_grad=False)
+        self.grad_sum = None
+        self.first_epoch = True
+        self.initial_w = None
+
+    def get_weighted_loss(
+        self,
+        losses: torch.Tensor,
+        shared_parameters: Union[List[torch.nn.parameter.Parameter], torch.Tensor],
+        task_specific_parameters: Union[
+            List[torch.nn.parameter.Parameter], torch.Tensor
+        ],
+        last_shared_parameters: Union[List[torch.nn.parameter.Parameter], torch.Tensor],
+        representation: Union[torch.nn.parameter.Parameter, torch.Tensor],
+        **kwargs,
+    ) -> Tuple[torch.Tensor, dict]:
+        """
+        Compute the weighted loss using ExcessMTL.
+
+        Parameters
+        ----------
+        losses : torch.Tensor
+            Tensor of task-specific losses.
+        shared_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        task_specific_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        last_shared_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        representation : Union[torch.nn.parameter.Parameter, torch.Tensor]
+        kwargs : dict
+            Additional arguments, including robust_step_size.
+
+        Returns
+        -------
+        loss : torch.Tensor
+            Weighted loss for backward computation.
+        extra_outputs : dict
+            Additional outputs, including task weights.
+        """
+        robust_step_size = kwargs.get("robust_step_size", 1.0)
+
+        # Compute gradients for tasks
+        grads = self._compute_grad(losses, shared_parameters)
+
+        if self.grad_sum is None:
+            self.grad_sum = torch.zeros_like(grads)
+
+        # Update gradient sum and compute weights
+        w = torch.zeros(self.n_tasks, device=self.device)
+        for i in range(self.n_tasks):
+            self.grad_sum[i] += grads[i] ** 2
+            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)
+            w[i] = grads[i].dot(grads[i]) / h_i
+
+        # Scale weights during the first epoch or adjust for robustness
+        if self.first_epoch:
+            self.initial_w = w.clone()
+            self.first_epoch = False
+        else:
+            w = w / self.initial_w
+            self.loss_weight *= torch.exp(w * robust_step_size)
+            self.loss_weight /= self.loss_weight.sum() * self.n_tasks
+            self.loss_weight = self.loss_weight.detach().clone()
+
+        # Compute weighted loss
+        weighted_loss = torch.sum(self.loss_weight * losses)
+
+        # Return loss and extra outputs
+        extra_outputs = {"weights": self.loss_weight.cpu().numpy()}
+        return weighted_loss, extra_outputs
+
+    def _compute_grad(self, losses: torch.Tensor, parameters: List[torch.nn.parameter.Parameter]):
+        """
+        Compute gradients of the losses w.r.t. the shared parameters.
+
+        Parameters
+        ----------
+        losses : torch.Tensor
+        parameters : List[torch.nn.parameter.Parameter]
+
+        Returns
+        -------
+        grads : torch.Tensor
+            Matrix of gradients (n_tasks x n_parameters).
+        """
+        grads = []
+        for i in range(self.n_tasks):
+            grad = torch.autograd.grad(
+                losses[i], parameters, retain_graph=True, create_graph=False, allow_unused=True
+            )
+            grad_flat = torch.cat([g.flatten() for g in grad if g is not None])
+            grads.append(grad_flat)
+
+        return torch.stack(grads)
+
+class MoCo(WeightMethod):
+    """
+    MoCo.
+
+    This method is proposed in `Mitigating Gradient Bias in Multi-objective Learning: A Provably Convergent Approach (ICLR 2023)
+    <https://openreview.net/forum?id=dLAYGdKTi2>`_ and implemented based on the author's shared code.
+
+    Args:
+        MoCo_beta (float, default=0.5): Learning rate of y.
+        MoCo_beta_sigma (float, default=0.5): Decay rate of MoCo_beta.
+        MoCo_gamma (float, default=0.1): Learning rate of lambd.
+        MoCo_gamma_sigma (float, default=0.5): Decay rate of MoCo_gamma.
+        MoCo_rho (float, default=0): L2 regularization parameter of lambda's update.
+
+    Warning:
+        MoCo is not supported for representation gradients (`rep_grad=True`).
+    """
+    def __init__(self, n_tasks: int, device: torch.device):
+        super().__init__(n_tasks, device)
+        self.step = 0
+        self.y = None
+        self.lambd = None
+
+    def get_weighted_loss(
+        self,
+        losses: torch.Tensor,
+        shared_parameters: Union[List[torch.nn.parameter.Parameter], torch.Tensor],
+        task_specific_parameters: Union[
+            List[torch.nn.parameter.Parameter], torch.Tensor
+        ],
+        last_shared_parameters: Union[List[torch.nn.parameter.Parameter], torch.Tensor],
+        representation: Union[torch.nn.parameter.Parameter, torch.Tensor],
+        **kwargs,
+    ) -> Tuple[torch.Tensor, dict]:
+        """
+        Compute the weighted loss using MoCo.
+
+        Parameters
+        ----------
+        losses : torch.Tensor
+            Tensor of task-specific losses.
+        shared_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        task_specific_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        last_shared_parameters : Union[List[torch.nn.parameter.Parameter], torch.Tensor]
+        representation : Union[torch.nn.parameter.Parameter, torch.Tensor]
+        kwargs : dict
+            Additional arguments: MoCo_beta, MoCo_beta_sigma, MoCo_gamma, MoCo_gamma_sigma, MoCo_rho.
+
+        Returns
+        -------
+        loss : torch.Tensor
+            Weighted loss for backward computation.
+        extra_outputs : dict
+            Additional outputs, including lambda weights.
+        """
+        if representation is not None:
+            raise ValueError("MoCo does not support representation gradients (rep_grad=True)")
+
+        beta = kwargs.get("MoCo_beta", 0.5)
+        beta_sigma = kwargs.get("MoCo_beta_sigma", 0.5)
+        gamma = kwargs.get("MoCo_gamma", 0.1)
+        gamma_sigma = kwargs.get("MoCo_gamma_sigma", 0.5)
+        rho = kwargs.get("MoCo_rho", 0.0)
+
+        # Initialize parameters on the first call
+        if self.step == 0:
+            grad_dim = self._compute_grad_dim(shared_parameters)
+            self.y = torch.zeros(self.n_tasks, grad_dim, device=self.device)
+            self.lambd = torch.ones(self.n_tasks, device=self.device) / self.n_tasks
+
+        self.step += 1
+
+        # Compute gradients
+        grads = self._compute_grad(losses, shared_parameters)
+        with torch.no_grad():
+            for tn in range(self.n_tasks):
+                grads[tn] = grads[tn] / (grads[tn].norm() + 1e-8) * losses[tn]
+
+        # Update y
+        self.y = self.y - (beta / self.step**beta_sigma) * (self.y - grads)
+
+        # Update lambda
+        y_yt = self.y @ self.y.t()
+        reg_term = rho * torch.eye(self.n_tasks, device=self.device)
+        self.lambd = F.softmax(
+            self.lambd - (gamma / self.step**gamma_sigma) * (y_yt + reg_term) @ self.lambd, dim=-1
+        )
+
+        # Compute weighted gradients
+        new_grads = self.y.t() @ self.lambd
+
+        # Reset gradients and compute the weighted loss
+        self._reset_grad(new_grads, shared_parameters)
+        weighted_loss = torch.sum(losses * self.lambd)
+
+        extra_outputs = {"lambda": self.lambd.detach().cpu().numpy()}
+        return weighted_loss, extra_outputs
+
+    def _compute_grad(self, losses: torch.Tensor, parameters: List[torch.nn.parameter.Parameter]):
+        """
+        Compute gradients of the losses w.r.t. the shared parameters.
+
+        Parameters
+        ----------
+        losses : torch.Tensor
+        parameters : List[torch.nn.parameter.Parameter]
+
+        Returns
+        -------
+        grads : torch.Tensor
+            Matrix of gradients (n_tasks x n_parameters).
+        """
+        grads = []
+        for i in range(self.n_tasks):
+            grad = torch.autograd.grad(
+                losses[i], parameters, retain_graph=True, create_graph=False, allow_unused=True
+            )
+            grad_flat = torch.cat([g.flatten() for g in grad if g is not None])
+            grads.append(grad_flat)
+
+        return torch.stack(grads)
+
+    def _reset_grad(self, new_grads: torch.Tensor, parameters: List[torch.nn.parameter.Parameter]):
+        """
+        Set gradients for the shared parameters.
+
+        Parameters
+        ----------
+        new_grads : torch.Tensor
+            Weighted gradients to set.
+        parameters : List[torch.nn.parameter.Parameter]
+            Shared parameters to reset gradients.
+        """
+        grad_idx = 0
+        for param in parameters:
+            num_params = param.numel()
+            grad = new_grads[grad_idx : grad_idx + num_params].view_as(param)
+            param.grad = grad
+            grad_idx += num_params
+
 class LinearScalarization(WeightMethod):
     """Linear scalarization baseline L = sum_j w_j * l_j where l_j is the loss for task j and w_h"""
 

@@ -10,7 +10,7 @@ import gc
 
 import traceback
 from utils.options import parse_arguments
-from .weight_methods import WeightMethods, PCGrad, IMTLG, MGDA, FairGrad
+from .weight_methods import WeightMethods, PCGrad, IMTLG, MGDA, FairGrad, ExcessMTL, MoCo
 from .sam import SAM
 opts = parse_arguments()
 if opts.mul_task_type == 'NashMTL':
@@ -239,6 +239,12 @@ class Worker(object):
 
                             if opts.mul_task_type == 'FairGrad':
                                 self.mul_loss = FairGrad(n_tasks=len(loss), device=self.device)
+
+                            if opts.mul_task_type == 'ExcessMTL':
+                                self.mul_loss = ExcessMTL(n_tasks=len(loss), device=self.device)
+
+                            if opts.mul_task_type == 'MoCo':
+                                self.mul_loss = MoCo(n_tasks=len(loss), device=self.device)
                         try:
                             if self.mul_loss.n_tasks != len(loss):
                                 
@@ -261,6 +267,10 @@ class Worker(object):
                                     self.mul_loss = NashMTL(n_tasks=len(loss), device=self.device)
                                 if opts.mul_task_type == 'FairGrad':
                                     self.mul_loss = FairGrad(n_tasks=len(loss), device=self.device)
+                                if opts.mul_task_type == 'ExcessMTL':
+                                    self.mul_loss = ExcessMTL(n_tasks=len(loss), device=self.device)
+                                if opts.mul_task_type == 'MoCo':
+                                    self.mul_loss = MoCo(n_tasks=len(loss), device=self.device)
 
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
@@ -279,7 +289,7 @@ class Worker(object):
                             ## change ###
                             new_loss = [torch.sum(l + torch.sum(torch.stack(loss)) * opts.extra_weight_loss) for l in loss]
                             #############
-                            
+
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=0.5)
                         except Exception as e:
                             #import pdb
