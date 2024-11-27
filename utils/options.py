@@ -120,7 +120,7 @@ class Config:
         contrastive=False,
         mul_distill=True,
         mul_task_type="NashMTL",
-        extra_weight_loss = 3,
+        extra_weight_loss = 0,
         naive_replay=False,
         debug=False,
         colab_viet=False,
