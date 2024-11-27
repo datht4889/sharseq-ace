@@ -294,9 +294,9 @@ def main():
                     'train_loss': epoch_loss.value,
                     'train_metric': epoch_metric.value,
                     'dev_loss': dev_loss.value,
-                    'dev_metrics': dev_metrics.value,
+                    'dev_metrics': dev_metrics,
                     'test_loss': test_loss.value,
-                    'test_metrics': test_metrics.value
+                    'test_metrics': test_metrics
                 })
                 loss_file.write('\n')  
                 best_dev = dev_metrics
