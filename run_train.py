@@ -418,8 +418,8 @@ def main():
                     output_log(f"BEST TEST {loader_id-1}: {best_test if best_test is not None else 0}")
                 wandb.log({
                     'task': loader_id-1, 
-                    'best dev': best_dev.value if best_dev is not None else 0, 
-                    'best test': best_test.value if best_test is not None else 0})
+                    'best dev': best_dev if best_dev is not None else 0, 
+                    'best test': best_test if best_test is not None else 0})
                 loss_file.write('\n')  
                 if loader_id == len(loaders) - 2:
                     termination = True
