@@ -275,11 +275,11 @@ class Worker(object):
                             loss = f_loss(batch)
                             if opts.mul_task_type == 'IMTLG' or  opts.mul_task_type == 'PCGrad' or opts.mul_task_type == 'MGDA':
                                 loss = torch.stack(loss) * 1.0
+                            
                             ## change ###
-                            new_loss = []
-                            for _ in loss:
-                                new_loss.append(torch.sum(_ + torch.sum(torch.stack(loss))*opts.extra_weight_loss))
+                            new_loss = [torch.sum(l + torch.sum(torch.stack(loss)) * opts.extra_weight_loss) for l in loss]
                             #############
+                            
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=0.5)
                         except Exception as e:
                             #import pdb
