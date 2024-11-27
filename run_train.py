@@ -291,12 +291,12 @@ def main():
                 loss_file.writelines(f"Epoch {worker.epoch:3d}  Train Loss {epoch_loss} {epoch_metric} Dev {dev_metrics} Test {test_metrics}")
                 wandb.log({
                     'epoch': worker.epoch,
-                    'train_loss': epoch_loss,
-                    'train_metric': epoch_metric,
-                    'dev_loss': dev_loss,
-                    'dev_metrics': dev_metrics if dev_metrics else None,
-                    'test_loss': test_loss,
-                    'test_metrics': test_metrics if test_metrics else None
+                    'train_loss': epoch_loss.value,
+                    'train_metric': epoch_metric.value,
+                    'dev_loss': dev_loss.value,
+                    'dev_metrics': dev_metrics.value,
+                    'test_loss': test_loss.value,
+                    'test_metrics': test_metrics.value
                 })
                 loss_file.write('\n')  
                 best_dev = dev_metrics
@@ -418,8 +418,8 @@ def main():
                     output_log(f"BEST TEST {loader_id-1}: {best_test if best_test is not None else 0}")
                 wandb.log({
                     'task': loader_id-1, 
-                    'best dev': best_dev if best_dev is not None else 0, 
-                    'best test': best_test if best_test is not None else 0})
+                    'best dev': best_dev.value if best_dev is not None else 0, 
+                    'best test': best_test.value if best_test is not None else 0})
                 loss_file.write('\n')  
                 if loader_id == len(loaders) - 2:
                     termination = True
