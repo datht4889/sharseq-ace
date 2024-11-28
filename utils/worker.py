@@ -321,8 +321,8 @@ class Worker(object):
                     loss  = f_loss(batch)
             if isinstance(loss, list):
                 print('loss fail')
-                import pdb
-                pdb.set_trace()
+                # import pdb
+                # pdb.set_trace()
             if loss > 0:
                 epoch_loss += loss.item()
                 epoch_metric += model.outputs[collect_stats]
