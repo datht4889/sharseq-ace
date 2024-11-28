@@ -428,8 +428,8 @@ class ExcessMTL(WeightMethod):
         # Update gradient sum and compute weights
         w = torch.zeros(self.n_tasks, device=self.device)
         for i in range(self.n_tasks):
-            self.grad_sum[i] += grads[i].pow(2)  # Accumulate squared gradients
-            grad_i = grads[i]
+            self.grad_sum[i] += grads[i].pow(2).sum()  # Accumulate the squared gradient sum
+            grad_i = grads[i].view(-1)  # Flatten the gradient to 1D
             h_i = torch.sqrt(self.grad_sum[i] + 1e-7)  # Scalar
             w[i] = grad_i.dot(grad_i) / h_i.item()  # Use h_i as a scalar
 
