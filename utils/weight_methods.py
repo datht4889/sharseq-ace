@@ -428,9 +428,10 @@ class ExcessMTL(WeightMethod):
         # Update gradient sum and compute weights
         w = torch.zeros(self.n_tasks, device=self.device)
         for i in range(self.n_tasks):
-            self.grad_sum[i] += grads[i] ** 2
-            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)
-            w[i] = grads[i].dot(grads[i]) / h_i
+            self.grad_sum[i] += grads[i].pow(2)  # Accumulate squared gradients
+            grad_i = grads[i]
+            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)  # Scalar
+            w[i] = grad_i.dot(grad_i) / h_i.item()  # Use h_i as a scalar
 
         # Scale weights during the first epoch or adjust for robustness
         if self.first_epoch:
@@ -495,6 +496,26 @@ class MoCo(WeightMethod):
         self.step = 0
         self.y = None
         self.lambd = None
+        self.grad_dim = None
+
+    def _compute_grad_dim(self, parameters: List[torch.nn.parameter.Parameter]) -> int:
+        """
+        Compute the total gradient dimensionality.
+
+        Parameters
+        ----------
+        parameters : List[torch.nn.parameter.Parameter]
+            The shared parameters of the model.
+
+        Returns
+        -------
+        int
+            The total dimensionality of gradients.
+        """
+        total_dim = 0
+        for param in parameters:
+            total_dim += param.numel()
+        return total_dim
 
     def get_weighted_loss(
         self,
@@ -539,8 +560,8 @@ class MoCo(WeightMethod):
 
         # Initialize parameters on the first call
         if self.step == 0:
-            grad_dim = self._compute_grad_dim(shared_parameters)
-            self.y = torch.zeros(self.n_tasks, grad_dim, device=self.device)
+            self.grad_dim = self._compute_grad_dim(shared_parameters)
+            self.y = torch.zeros(self.n_tasks, self.grad_dim, device=self.device)
             self.lambd = torch.ones(self.n_tasks, device=self.device) / self.n_tasks
 
         self.step += 1
@@ -571,7 +592,9 @@ class MoCo(WeightMethod):
         extra_outputs = {"lambda": self.lambd.detach().cpu().numpy()}
         return weighted_loss, extra_outputs
 
-    def _compute_grad(self, losses: torch.Tensor, parameters: List[torch.nn.parameter.Parameter]):
+    def _compute_grad(
+        self, losses: torch.Tensor, parameters: List[torch.nn.parameter.Parameter]
+    ) -> torch.Tensor:
         """
         Compute gradients of the losses w.r.t. the shared parameters.
 
@@ -612,7 +635,6 @@ class MoCo(WeightMethod):
             grad = new_grads[grad_idx : grad_idx + num_params].view_as(param)
             param.grad = grad
             grad_idx += num_params
-
 class LinearScalarization(WeightMethod):
     """Linear scalarization baseline L = sum_j w_j * l_j where l_j is the loss for task j and w_h"""
 
