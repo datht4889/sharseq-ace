@@ -156,7 +156,7 @@ def main():
     if opts.test_only:
         worker.load(model)
     best_dev = best_test = None
-    collect_stats = "accuracy"
+    collect_stats = "f1"
     collect_outputs = {"prediction", "label"}
     termination = False
     patience = opts.patience

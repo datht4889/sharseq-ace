@@ -175,7 +175,7 @@ class Worker(object):
         else:
             model.eval()
         epoch_loss = Record()
-        epoch_metric = Record(True)
+        epoch_metric = F1Record(True)
         epoch_loss.reset()
         epoch_metric.reset()
         if collect_outputs is not None:
@@ -287,10 +287,10 @@ class Worker(object):
                                 loss = torch.stack(loss) * 1.0
                             
                             ## change ###
-                            # new_loss = [torch.sum(l + torch.sum(torch.stack(loss)) * opts.extra_weight_loss) for l in loss]
+                            new_loss = [torch.sum(l + torch.sum(torch.stack(loss)) * opts.extra_weight_loss) for l in loss]
                             #############
 
-                            loss, alpha = self.mul_loss(losses=loss, shared_parameters=parameters, FairGrad_alpha=0.5)
+                            loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=0.5)
                         except Exception as e:
                             #import pdb
                             #pdb.set_trace()
