@@ -428,10 +428,16 @@ class ExcessMTL(WeightMethod):
         # Update gradient sum and compute weights
         w = torch.zeros(self.n_tasks, device=self.device)
         for i in range(self.n_tasks):
-            self.grad_sum[i] += grads[i].pow(2).sum()  # Accumulate the squared gradient sum
-            grad_i = grads[i].view(-1)  # Flatten the gradient to 1D
-            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)  # Scalar
-            w[i] = grad_i.dot(grad_i) / h_i.item()  # Use h_i as a scalar
+            # Accumulate squared gradients as a scalar
+            if self.grad_sum[i].dim() > 0:  # If grad_sum[i] is not a scalar
+                self.grad_sum[i] = self.grad_sum[i].sum()  # Convert it to a scalar
+
+            self.grad_sum[i] += grads[i].pow(2).sum()  # Sum of squared elements in grads[i]
+
+            grad_i = grads[i].view(-1)  # Flatten grads[i] to 1D
+            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)  # Scalar term for normalization
+
+            w[i] = grad_i.dot(grad_i) / h_i.item()  # Compute weight w[i]
 
         # Scale weights during the first epoch or adjust for robustness
         if self.first_epoch:
