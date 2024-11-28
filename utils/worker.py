@@ -175,7 +175,7 @@ class Worker(object):
         else:
             model.eval()
         epoch_loss = Record()
-        epoch_metric = F1Record(True)
+        epoch_metric = Record(True)
         epoch_loss.reset()
         epoch_metric.reset()
         if collect_outputs is not None:
