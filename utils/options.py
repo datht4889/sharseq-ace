@@ -119,7 +119,7 @@ class Config:
         mul_task=True,
         contrastive=False,
         mul_distill=True,
-        mul_task_type="ExcessMTL",
+        mul_task_type="MoCo",
         extra_weight_loss = 0.5,
         naive_replay=False,
         debug=False,
