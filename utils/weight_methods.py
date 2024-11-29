@@ -381,7 +381,7 @@ class ExcessMTL(WeightMethod):
     def __init__(self, n_tasks: int, device: torch.device):
         super().__init__(n_tasks, device)
         self.loss_weight = torch.ones(n_tasks, device=device, requires_grad=False)
-        self.grad_sum = None
+        self.grad_sum = torch.zeros(self.n_tasks, device=self.device)
         self.first_epoch = True
         self.initial_w = None
 
@@ -427,17 +427,19 @@ class ExcessMTL(WeightMethod):
 
         # Update gradient sum and compute weights
         w = torch.zeros(self.n_tasks, device=self.device)
+
         for i in range(self.n_tasks):
-            # Accumulate squared gradients as a scalar
-            if self.grad_sum[i].dim() > 0:  # If grad_sum[i] is not a scalar
-                self.grad_sum[i] = self.grad_sum[i].sum()  # Convert it to a scalar
+            # grads[i] may be multi-dimensional; flatten it to 1D
+            grad_i = grads[i].view(-1)  # Ensure grad_i is 1D
 
-            self.grad_sum[i] += grads[i].pow(2).sum()  # Sum of squared elements in grads[i]
+            # Accumulate squared gradients for scalar `grad_sum[i]`
+            self.grad_sum[i] += grad_i.pow(2).sum()  # Sum squared elements of grad_i
 
-            grad_i = grads[i].view(-1)  # Flatten grads[i] to 1D
-            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)  # Scalar term for normalization
+            # Compute `h_i` as a scalar value
+            h_i = torch.sqrt(self.grad_sum[i] + 1e-7)
 
-            w[i] = grad_i.dot(grad_i) / h_i.item()  # Compute weight w[i]
+            # Compute weight `w[i]`
+            w[i] = grad_i.dot(grad_i) / h_i.item()
 
         # Scale weights during the first epoch or adjust for robustness
         if self.first_epoch:
