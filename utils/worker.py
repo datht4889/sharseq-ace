@@ -289,6 +289,9 @@ class Worker(object):
                             ## change ###
                             # new_loss = [torch.sum(l + torch.sum(torch.stack(loss)) * opts.extra_weight_loss) for l in loss]
                             new_loss = [torch.sum(-l * opts.extra_weight_loss + torch.sum(torch.stack(loss))) for l in loss]
+                            scaling_factor = 1 + (self.epoch / opts.train_epoch)  # Linearly increase weight
+                            weights = torch.tensor([1.0, 1.0, scaling_factor, scaling_factor])
+                            new_loss = [w * l for w, l in zip(weights, loss)]
                             #############
 
                             loss, alpha = self.mul_loss(losses=new_loss, shared_parameters=parameters, FairGrad_alpha=0.5)
